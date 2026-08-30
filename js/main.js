@@ -47,17 +47,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ============================
-    // Add to Cart Logic
+    // Add to Cart & WhatsApp Logic
     // ============================
     const cartCountEl = document.getElementById('cartCount');
-    const cartBottomBtn = document.getElementById('cartBottomBtn');
-    let cartCount = 0;
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    
+    // Store cart items as an array of objects: { name, size }
+    let cart = [];
 
     const addBtns = document.querySelectorAll('.add-to-cart-btn');
 
     addBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            cartCount++;
+        btn.addEventListener('click', function() {
+            // Find product details
+            const card = this.closest('.product-card');
+            const productName = card.querySelector('.product-name').textContent.trim();
+            const activeSizeChip = card.querySelector('.size-chip.active');
+            const size = activeSizeChip ? activeSizeChip.textContent.trim() : 'Default';
+
+            // Add to cart array
+            cart.push({ name: productName, size: size });
+            
             updateCartBadge();
 
             // Visual feedback — button briefly shows "Added ✓"
@@ -85,12 +95,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCartBadge() {
         if (cartCountEl) {
-            cartCountEl.textContent = cartCount;
-            cartCountEl.setAttribute('data-count', cartCount);
-            if (cartCount > 0) {
+            const count = cart.length;
+            cartCountEl.textContent = count;
+            cartCountEl.setAttribute('data-count', count);
+            if (count > 0) {
                 cartCountEl.style.display = 'flex';
+            } else {
+                cartCountEl.style.display = 'none';
             }
         }
+    }
+
+    // Handle WhatsApp checkout
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            let message = "Hello Rejoice Enterprise,\n\nI would like to inquire about the following items:\n\n";
+            
+            if (cart.length === 0) {
+                message = "Hello Rejoice Enterprise, I am interested in your packaging products. Could you share a catalog?";
+            } else {
+                // Group items by name and size to get quantities
+                const itemCounts = {};
+                cart.forEach(item => {
+                    const key = `${item.name} (${item.size})`;
+                    itemCounts[key] = (itemCounts[key] || 0) + 1;
+                });
+                
+                // Build the order list
+                for (const [item, qty] of Object.entries(itemCounts)) {
+                    message += `- ${qty}x ${item}\n`;
+                }
+                
+                message += "\nCould you please let me know the pricing and availability?";
+            }
+            
+            // Open WhatsApp with pre-filled message
+            const whatsappUrl = `https://wa.me/916374450321?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        });
     }
 
     // ============================
