@@ -111,22 +111,10 @@ a {
     align-items: center;
     gap: 12px;
 }
-
-.logo-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--primary-surface);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.logo-icon svg {
-    width: 18px;
-    height: 18px;
-    color: var(--primary);
+.logo-img {
+    height: 38px;
+    width: auto;
+    object-fit: contain;
 }
 
 .logo-text {
