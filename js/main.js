@@ -167,12 +167,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="cart-item-name">${item.name}</span>
                         <span class="cart-item-size">Size: ${item.size}</span>
                     </div>
-                    <div class="cart-item-qty">${item.qty}x</div>
+                    <div class="cart-qty-controls">
+                        <button class="qty-btn" data-action="decrease" data-name="${item.name}" data-size="${item.size}">−</button>
+                        <span class="cart-item-qty">${item.qty}</span>
+                        <button class="qty-btn" data-action="increase" data-name="${item.name}" data-size="${item.size}">+</button>
+                    </div>
                 </div>
             `;
         }
 
         cartItemsContainer.innerHTML = html;
+    }
+
+    if (cartItemsContainer) {
+        cartItemsContainer.addEventListener('click', (e) => {
+            const btn = e.target.closest('.qty-btn');
+            if (!btn) return;
+            
+            const action = btn.getAttribute('data-action');
+            const name = btn.getAttribute('data-name');
+            const size = btn.getAttribute('data-size');
+            
+            if (action === 'increase') {
+                const existing = cart.find(item => item.name === name && item.size === size);
+                if (existing) {
+                    cart.push({ ...existing });
+                }
+            } else if (action === 'decrease') {
+                const index = cart.findIndex(item => item.name === name && item.size === size);
+                if (index !== -1) {
+                    cart.splice(index, 1);
+                }
+            }
+            
+            updateCartBadge();
+            renderCartItems();
+        });
     }
 
     function getGroupedCartItems() {
