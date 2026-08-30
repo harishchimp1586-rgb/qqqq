@@ -1,70 +1,134 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // Bottom Navigation Logic
-    const navItems = document.querySelectorAll('.nav-item');
-    
-    navItems.forEach(item => {
-        item.addEventListener('click', function(e) {
-            // Remove active class from all
-            navItems.forEach(nav => nav.classList.remove('active'));
-            // Add to clicked
-            this.classList.add('active');
+
+    // ============================
+    // Mobile Drawer Toggle
+    // ============================
+    const menuToggle = document.getElementById('menuToggle');
+    const drawerOverlay = document.getElementById('drawerOverlay');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const drawerClose = document.getElementById('drawerClose');
+
+    function openDrawer() {
+        mobileDrawer.classList.add('open');
+        drawerOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDrawer() {
+        mobileDrawer.classList.remove('open');
+        drawerOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if (menuToggle) menuToggle.addEventListener('click', openDrawer);
+    if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+    if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
+
+    // Close drawer on link click
+    const drawerLinks = document.querySelectorAll('.drawer-nav a');
+    drawerLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            closeDrawer();
         });
     });
 
-    // Category Chips Logic
-    const chips = document.querySelectorAll('.category-chip');
-    
-    chips.forEach(chip => {
-        chip.addEventListener('click', function() {
-            chips.forEach(c => c.classList.remove('active'));
-            this.classList.add('active');
+    // ============================
+    // Size Chip Selection
+    // ============================
+    const productCards = document.querySelectorAll('.product-card');
+    productCards.forEach(card => {
+        const chips = card.querySelectorAll('.size-chip');
+        chips.forEach(chip => {
+            chip.addEventListener('click', () => {
+                chips.forEach(c => c.classList.remove('active'));
+                chip.classList.add('active');
+            });
         });
     });
 
-    // Add to Cart Logic (visual only)
-    const addBtns = document.querySelectorAll('.add-btn');
-    const cartBadge = document.querySelector('.cart-badge');
+    // ============================
+    // Add to Cart Logic
+    // ============================
+    const cartCountEl = document.getElementById('cartCount');
+    const cartBottomBtn = document.getElementById('cartBottomBtn');
     let cartCount = 0;
-    
+
+    const addBtns = document.querySelectorAll('.add-to-cart-btn');
+
     addBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', () => {
             cartCount++;
-            cartBadge.textContent = cartCount;
-            
-            // Visual feedback on the button
-            const originalHTML = this.innerHTML;
-            this.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            this.style.backgroundColor = '#10b981'; // Success green
-            
+            updateCartBadge();
+
+            // Visual feedback — button briefly shows "Added ✓"
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Added
+            `;
+            btn.classList.add('added');
+
+            // Animate cart badge
+            if (cartCountEl) {
+                cartCountEl.classList.add('cart-pop');
+                setTimeout(() => cartCountEl.classList.remove('cart-pop'), 300);
+            }
+
             setTimeout(() => {
-                this.innerHTML = originalHTML;
-                this.style.backgroundColor = ''; // Reset
-            }, 1000);
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('added');
+            }, 1200);
         });
     });
 
-    // Handle initial scroll active states based on IntersectionObserver
+    function updateCartBadge() {
+        if (cartCountEl) {
+            cartCountEl.textContent = cartCount;
+            cartCountEl.setAttribute('data-count', cartCount);
+            if (cartCount > 0) {
+                cartCountEl.style.display = 'flex';
+            }
+        }
+    }
+
+    // ============================
+    // Desktop Nav Active State
+    // ============================
+    const desktopNavLinks = document.querySelectorAll('.desktop-nav a');
     const sections = document.querySelectorAll('section[id]');
-    const observerOptions = {
+
+    const observerOpts = {
         root: null,
-        rootMargin: '-50px 0px -50% 0px',
+        rootMargin: '-60px 0px -50% 0px',
         threshold: 0
     };
-    
-    const observer = new IntersectionObserver((entries) => {
+
+    const sectionObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const id = entry.target.getAttribute('id');
-                const navLink = document.querySelector(`.nav-item[href="#${id}"]`);
-                if (navLink) {
-                    navItems.forEach(nav => nav.classList.remove('active'));
-                    navLink.classList.add('active');
-                }
+                desktopNavLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                });
             }
         });
-    }, observerOptions);
+    }, observerOpts);
 
-    sections.forEach(sec => observer.observe(sec));
-    
+    sections.forEach(sec => sectionObserver.observe(sec));
+
+    // ============================
+    // Smooth Scroll for anchor links
+    // ============================
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
 });
