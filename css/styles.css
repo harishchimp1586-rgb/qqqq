@@ -835,6 +835,16 @@ a {
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid var(--border-light);
+    gap: 12px;
+}
+
+.cart-item-img {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background: #f0f0f0;
+    flex-shrink: 0;
 }
 
 .cart-item:last-child {
@@ -845,6 +855,7 @@ a {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex-grow: 1;
 }
 
 .cart-item-name {

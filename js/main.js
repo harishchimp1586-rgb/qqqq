@@ -64,9 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const productName = card.querySelector('.product-name').textContent.trim();
             const activeSizeChip = card.querySelector('.size-chip.active');
             const size = activeSizeChip ? activeSizeChip.textContent.trim() : 'Default';
+            const imgSrc = card.querySelector('img').getAttribute('src');
 
             // Add to cart array
-            cart.push({ name: productName, size: size });
+            cart.push({ name: productName, size: size, img: imgSrc });
             
             updateCartBadge();
 
@@ -155,21 +156,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const itemCounts = getGroupedCartItems();
+        const itemGroups = getGroupedCartItems();
         let html = '';
 
-        for (const [key, qty] of Object.entries(itemCounts)) {
-            // key is "ProductName (Size)" - let's split it for styling
-            const name = key.substring(0, key.lastIndexOf(' ('));
-            const size = key.substring(key.lastIndexOf('(') + 1, key.lastIndexOf(')'));
-            
+        for (const [key, item] of Object.entries(itemGroups)) {
             html += `
                 <div class="cart-item">
+                    <img src="${item.img}" alt="${item.name}" class="cart-item-img">
                     <div class="cart-item-info">
-                        <span class="cart-item-name">${name}</span>
-                        <span class="cart-item-size">Size: ${size}</span>
+                        <span class="cart-item-name">${item.name}</span>
+                        <span class="cart-item-size">Size: ${item.size}</span>
                     </div>
-                    <div class="cart-item-qty">${qty}x</div>
+                    <div class="cart-item-qty">${item.qty}x</div>
                 </div>
             `;
         }
@@ -178,12 +176,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getGroupedCartItems() {
-        const itemCounts = {};
+        const itemGroups = {};
         cart.forEach(item => {
             const key = `${item.name} (${item.size})`;
-            itemCounts[key] = (itemCounts[key] || 0) + 1;
+            if (!itemGroups[key]) {
+                itemGroups[key] = {
+                    name: item.name,
+                    size: item.size,
+                    img: item.img,
+                    qty: 0
+                };
+            }
+            itemGroups[key].qty += 1;
         });
-        return itemCounts;
+        return itemGroups;
     }
 
     function checkoutViaWhatsApp() {
@@ -192,9 +198,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cart.length === 0) {
             message = "Hello Rejoice Enterprise, I am interested in your packaging products. Could you share a catalog?";
         } else {
-            const itemCounts = getGroupedCartItems();
-            for (const [item, qty] of Object.entries(itemCounts)) {
-                message += `- ${qty}x ${item}\n`;
+            const itemGroups = getGroupedCartItems();
+            for (const [key, item] of Object.entries(itemGroups)) {
+                message += `- ${item.qty}x ${item.name} (${item.size})\n`;
             }
             message += "\nCould you please let me know the pricing and availability?";
         }
