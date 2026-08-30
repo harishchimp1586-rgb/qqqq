@@ -106,35 +106,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Handle WhatsApp checkout
+    // Handle WhatsApp checkout logic (Original Button)
     if (whatsappBtn) {
         whatsappBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            
-            let message = "Hello Rejoice Enterprise,\n\nI would like to inquire about the following items:\n\n";
-            
-            if (cart.length === 0) {
-                message = "Hello Rejoice Enterprise, I am interested in your packaging products. Could you share a catalog?";
-            } else {
-                // Group items by name and size to get quantities
-                const itemCounts = {};
-                cart.forEach(item => {
-                    const key = `${item.name} (${item.size})`;
-                    itemCounts[key] = (itemCounts[key] || 0) + 1;
-                });
-                
-                // Build the order list
-                for (const [item, qty] of Object.entries(itemCounts)) {
-                    message += `- ${qty}x ${item}\n`;
-                }
-                
-                message += "\nCould you please let me know the pricing and availability?";
-            }
-            
-            // Open WhatsApp with pre-filled message
-            const whatsappUrl = `https://wa.me/916374450321?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
+            checkoutViaWhatsApp();
         });
+    }
+
+    // ============================
+    // Cart Drawer Logic
+    // ============================
+    const cartBottomBtn = document.getElementById('cartBottomBtn');
+    const cartDrawer = document.getElementById('cartDrawer');
+    const cartOverlay = document.getElementById('cartOverlay');
+    const cartCloseBtn = document.getElementById('cartCloseBtn');
+    const cartItemsContainer = document.getElementById('cartItemsContainer');
+    const cartCheckoutBtn = document.getElementById('cartCheckoutBtn');
+
+    function openCartDrawer() {
+        renderCartItems();
+        cartDrawer.classList.add('open');
+        cartOverlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCartDrawer() {
+        cartDrawer.classList.remove('open');
+        cartOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    if (cartBottomBtn) cartBottomBtn.addEventListener('click', openCartDrawer);
+    if (cartCloseBtn) cartCloseBtn.addEventListener('click', closeCartDrawer);
+    if (cartOverlay) cartOverlay.addEventListener('click', closeCartDrawer);
+
+    if (cartCheckoutBtn) {
+        cartCheckoutBtn.addEventListener('click', () => {
+            checkoutViaWhatsApp();
+        });
+    }
+
+    function renderCartItems() {
+        if (!cartItemsContainer) return;
+        
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
+            return;
+        }
+
+        const itemCounts = getGroupedCartItems();
+        let html = '';
+
+        for (const [key, qty] of Object.entries(itemCounts)) {
+            // key is "ProductName (Size)" - let's split it for styling
+            const name = key.substring(0, key.lastIndexOf(' ('));
+            const size = key.substring(key.lastIndexOf('(') + 1, key.lastIndexOf(')'));
+            
+            html += `
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <span class="cart-item-name">${name}</span>
+                        <span class="cart-item-size">Size: ${size}</span>
+                    </div>
+                    <div class="cart-item-qty">${qty}x</div>
+                </div>
+            `;
+        }
+
+        cartItemsContainer.innerHTML = html;
+    }
+
+    function getGroupedCartItems() {
+        const itemCounts = {};
+        cart.forEach(item => {
+            const key = `${item.name} (${item.size})`;
+            itemCounts[key] = (itemCounts[key] || 0) + 1;
+        });
+        return itemCounts;
+    }
+
+    function checkoutViaWhatsApp() {
+        let message = "Hello Rejoice Enterprise,\n\nI would like to inquire about the following items:\n\n";
+        
+        if (cart.length === 0) {
+            message = "Hello Rejoice Enterprise, I am interested in your packaging products. Could you share a catalog?";
+        } else {
+            const itemCounts = getGroupedCartItems();
+            for (const [item, qty] of Object.entries(itemCounts)) {
+                message += `- ${qty}x ${item}\n`;
+            }
+            message += "\nCould you please let me know the pricing and availability?";
+        }
+        
+        const whatsappUrl = `https://wa.me/916374450321?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
     }
 
     // ============================
